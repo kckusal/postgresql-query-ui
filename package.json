@@ -1,0 +1,17 @@
+{
+  "name": "app",
+  "version": "0.0.1",
+  "description": "",
+  "main": "index.js",
+  "scripts": {},
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "express": "latest",
+    "body-parser": "latest",
+    "pg": "7.9.0",
+    "path": "0.12.7",
+    "pug": "2.0.3",
+    "dotenv": "7.0.0"
+  }
+}

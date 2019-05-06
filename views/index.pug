@@ -1,0 +1,152 @@
+extends layout
+
+block content
+
+    div.columns.is-gapless.p-lg
+        div.column.is-half
+            div.card.p-md
+                p.title.is-5 Last query:
+                    a(href='/').tag.is-pulled-right Reset
+                code.m-b-md
+                    | #{query ? query : 'No queries tried yet!'}
+
+                p.title.is-5.m-t-lg.p-r-md Last query Result: 
+                    if success === true
+                        span.tag.is-success.is-pulled-right Success
+                    if success === false
+                        span.tag.is-danger.is-pulled-right Error
+
+
+                pre.m-r-md(style="height: 400px;")
+                    code.language-json.
+                        #{JSON.stringify(result, null, 3)}
+
+                p   #[strong NOTE]: Look up in the database to see the reflected changes.
+
+        div.column.is-half.content
+            div.card.p-md
+                form(action="/execute" method="GET").m-t-md
+                    div.title.is-4
+                        label(for='query') Custom Query:
+                    div
+                        textarea(name="sql", placeholder="Enter your query here.", style="height: 150px; width: 100%; resize:none; display: inline-block; font-size: 16px;", required).p-md
+                    div
+                        input(type="submit", value="Execute Query").button.is-info
+                
+                p.title.is-5.m-t-lg Example Queries:
+                pre(style="height: 600px")
+                    code.
+                        DROP TABLE IF EXISTS users;
+
+                        CREATE TABLE users (uid SERIAL PRIMARY KEY, data JSONb NOT NULL);
+
+                        INSERT INTO users (uid, data) VALUES (1, '{ "name": { "first": "Kusal", "last": "KC" } } ');
+
+                        INSERT INTO users (uid, data) VALUES (
+                            2,
+                            '{
+                                "name": { "first": "Bekpasha", "last": "Dursunov" },
+                                "type": "patient"
+                            } '
+                        ),(
+                            3,
+                            '{
+                                "name": { "first": "Ezio", "last": "Thapaliya" },
+                                "type": "doctor",
+                                "active": false,
+                                "clinic_id": 3,
+                                "email": "e.thapaliya@innopolis.ru",
+                                "security_questions": [
+                                    { "question": "What is your birth city?", "answer": "Innopolis" },
+                                    { "question": "What is your favorite color?", "answer": "maroon" },
+                                    { "question": "What is your best friend middle name?", "answer": "harris" }
+                                ]
+                            } '
+                        ),(
+                            4,
+                            '{
+                                "name": { "first": "Evan", "last": "Hansen" },
+                                "type": "doctor",
+                                "clinic_id": 2,
+                                "active": true,
+                                "designation": "Head of Neurology",
+                                "highest_degree": "M.D. in Neuroscience",
+                                "birthdate": "1989-12-19",
+                                "email": "e.hansen@gmail.com",
+                                "address": "Kazan, Russia",
+                                "phone": "+929 4302 1112",
+                                "password": "some_hashed_value",
+                                "security_questions": [
+                                    { "question": "Which is your favorite car?", "answer": "mercedes"},
+                                    { "question": "Who is your best friend?", "answer": "lisa" },
+                                    { "question": "Which month was your father born?", "answer": "june" }
+                                ]
+                            }'
+                        ),(
+                            5,
+                            '{
+                                "name": { "first": "John", "last": "Doe" },
+                                "type": "patient",
+                                "birthdate": "2000-02-11",
+                                "email": "j.doe@innopolis.ru",
+                                "address": "Innopolis University",
+                                "phone": "+929 1202 1232",
+                                "password": "some_hashed_value",
+                                "security_questions": [
+                                    { "question": "Name your favorite color?", "answer": "red"},
+                                    { "question": "What is your favorite subject?", "answer": "calculus" },
+                                    { "question": "Which month was your mother born?", "answer": "augUST" }
+                                ]
+                            }'
+                        );
+
+                        SELECT uid, data->>'name' AS Name FROM users WHERE data->>'type'='doctor'
+                        SELECT uid, data->>'name' AS Name FROM users WHERE data->>'type'='doctor' AND data->>'active'='true'
+
+                        SELECT DISTINCT data->'type' AS type FROM users WHERE (data->'type') IS NOT NULL;
+                        
+                        
+                        DROP TABLE IF EXISTS clinic;
+
+                        CREATE TABLE clinic (id SERIAL PRIMARY KEY, data JSONb NOT NULL);
+
+                        INSERT INTO clinic (id, data) VALUES (
+                            1,
+                            '{
+                                "name": "Clinic no. 1",
+                                "facilities": [ "X-RAY", "CT-SCAN", "fluorography", "blood" ]
+                            } '
+                        ),(
+                            2,
+                            '{
+                                "name": "Clinic no. 2",
+                                "facilities": [ "X-RAY", "fluorography", "blood" ]
+                            } '
+                        ),(
+                            3,
+                            '{
+                                "name": "Clinic no. 3",
+                                "facilities": [ "fluorography", "blood" ]
+                            } '
+                        );
+
+                        SELECT DISTINCT
+                            u.uid AS "User ID",
+                            u.data->'name'->>'first' as "User",
+                            c.data->>'name' as "Clinic Name"
+                        FROM users u
+                        JOIN clinic c
+                        ON (u.data->'clinic_id')::text::int = c.id
+                        WHERE (u.data->'active')::text::boolean=true;
+
+                        SELECT DISTINCT
+                            u.uid AS "User ID",
+                            u.data->'name'->>'first' as "User",
+                            c.data->>'name' as "Clinic Name",
+                            c.data->>'facilities' as "Clinic Facilities"
+                        FROM users u
+                        JOIN clinic c
+                        ON (u.data->'clinic_id')::text::int = c.id
+                        WHERE (u.data->'active')::text::boolean=true;
+
+
